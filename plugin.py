@@ -284,6 +284,17 @@ class AmnesiaCommand(BaseCommand):
             logger.info(f"  🎬 动作记录: {stats['action_records']} 条")
             logger.info(f"  📦 总计: {total_cleared} 项记忆")
 
+            # 等待消息发送完成后，清除统计报告消息本身的记录
+            # 这样才是真正的"完全失忆"，数据库中不留任何痕迹
+            import asyncio
+            await asyncio.sleep(0.5)  # 等待消息被记录到数据库
+
+            # 删除刚才发送的统计报告和命令的消息记录
+            msg_count = Messages.delete().execute()
+            stream_count = ChatStreams.delete().execute()
+            logger.info(f"[完全失忆] 清除统计报告等消息记录: {msg_count} 条消息, {stream_count} 个聊天流")
+            logger.info(f"[完全失忆] 数据库已完全清空，真正的失忆完成！")
+
         except Exception as e:
             logger.error(f"完全失忆失败: {e}", exc_info=True)
             await self.send_text(f"😖 完全失忆失败了...\n\n错误: {str(e)}")

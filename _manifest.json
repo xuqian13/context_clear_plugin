@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "name": "context_clear_plugin",
   "display_name": "麦麦失忆插件 (上下文清除插件升级版)",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "让麦麦选择性失忆,忘记之前的对话~ 支持忘记全部/最近/指定时间前的记忆,新增完全失忆模式 (改进自上下文清除插件)",
   "author": {
     "name": "靓仔",
