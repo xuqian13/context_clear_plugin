@@ -226,15 +226,25 @@ class AmnesiaCommand(BaseCommand):
             stats["expression"] = Expression.delete().execute()
             stats["action_records"] = ActionRecords.delete().execute()
 
-            # 2. 清除本地存储
+            # 2. 清除本地存储（保留统计数据）
             logger.info("[完全失忆] 清除本地存储...")
             local_store_path = "/home/ubuntu/maimai/MaiBot/data/local_store.json"
             if os.path.exists(local_store_path):
-                # 重置为初始状态
+                # 读取现有数据
+                with open(local_store_path, 'r', encoding='utf-8') as f:
+                    old_data = json.load(f)
+
+                # 重置为初始状态，但保留统计数据
                 initial_data = {
                     "deploy_time": datetime.now().timestamp(),
-                    "mmc_uuid": json.load(open(local_store_path)).get("mmc_uuid", "")
+                    "mmc_uuid": old_data.get("mmc_uuid", "")
                 }
+
+                # 保留统计数据（如果存在）
+                if "last_full_statistics" in old_data:
+                    initial_data["last_full_statistics"] = old_data["last_full_statistics"]
+                    logger.info("[完全失忆] 保留统计数据")
+
                 with open(local_store_path, 'w', encoding='utf-8') as f:
                     json.dump(initial_data, f, indent=4, ensure_ascii=False)
 

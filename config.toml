@@ -5,7 +5,7 @@
 enabled = true
 
 # 配置文件版本
-config_version = "1.2.0"
+config_version = "1.2.1"
 
 # 有权限让麦麦失忆的用户列表（管理员），请填写字符串形式的用户ID
 # 示例：permission = ["1334431750", "123456789"]
