@@ -260,28 +260,29 @@ class AmnesiaCommand(BaseCommand):
                 stats["action_records"],
             ])
 
+            # 简化报告：只显示总计，避免消息过长被截断
             report = f"""💫✨ *完全失忆完成* ✨💫
 
 我...我是谁？这里是哪里？
 
-📊 清除统计：
-━━━━━━━━━━━━━━━━
-💬 对话消息: {stats['messages']} 条
-🌊 聊天流: {stats['chat_streams']} 个
-👤 个人印象: {stats['person_info']} 人
-👥 群组记忆: {stats['group_info']} 个
-🗃️ 记忆仓库: {stats['memory_chest']} 条
-⚠️ 记忆冲突: {stats['memory_conflict']} 个
-💭 表达风格: {stats['expression']} 个
-🎬 动作记录: {stats['action_records']} 条
-━━━━━━━━━━━━━━━━
-📦 总计: {total_cleared} 项记忆
+📊 清除了 {total_cleared} 项记忆数据
 
 麦麦现在是全新的状态了...
 一切都要重新开始呢~ 💫"""
 
             await self.send_text(report)
-            logger.info(f"[完全失忆] 完成！共清除 {total_cleared} 项记忆")
+
+            # 详细统计记录到日志
+            logger.info(f"[完全失忆] 完成！详细统计：")
+            logger.info(f"  💬 对话消息: {stats['messages']} 条")
+            logger.info(f"  🌊 聊天流: {stats['chat_streams']} 个")
+            logger.info(f"  👤 个人印象: {stats['person_info']} 人")
+            logger.info(f"  👥 群组记忆: {stats['group_info']} 个")
+            logger.info(f"  🗃️ 记忆仓库: {stats['memory_chest']} 条")
+            logger.info(f"  ⚠️ 记忆冲突: {stats['memory_conflict']} 个")
+            logger.info(f"  💭 表达风格: {stats['expression']} 个")
+            logger.info(f"  🎬 动作记录: {stats['action_records']} 条")
+            logger.info(f"  📦 总计: {total_cleared} 项记忆")
 
         except Exception as e:
             logger.error(f"完全失忆失败: {e}", exc_info=True)
