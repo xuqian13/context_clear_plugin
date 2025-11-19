@@ -196,6 +196,8 @@ class AmnesiaCommand(BaseCommand):
         """执行完全失忆（已确认）"""
         try:
             from src.common.database.database import db
+            import asyncio
+            import time
 
             stats = {
                 "messages": 0,
@@ -207,6 +209,9 @@ class AmnesiaCommand(BaseCommand):
                 "expression": 0,
                 "action_records": 0,
             }
+
+            # 记录当前时间戳，用于后续延迟删除
+            cutoff_time = time.time() + 10  # 未来10秒内的消息都会被删除
 
             # 1. 清除数据库表
             logger.info("[完全失忆] 开始清除数据库...")
@@ -294,16 +299,26 @@ class AmnesiaCommand(BaseCommand):
             logger.info(f"  🎬 动作记录: {stats['action_records']} 条")
             logger.info(f"  📦 总计: {total_cleared} 项记忆")
 
-            # 等待消息发送完成后，清除统计报告消息本身的记录
-            # 这样才是真正的"完全失忆"，数据库中不留任何痕迹
-            import asyncio
-            await asyncio.sleep(0.5)  # 等待消息被记录到数据库
-
-            # 删除刚才发送的统计报告和命令的消息记录
+            # 方案2：分两步删除消息
+            # 第一步：等待统计报告被存储后立即删除
+            await asyncio.sleep(0.5)  # 短暂等待确保统计报告被存储
             msg_count = Messages.delete().execute()
             stream_count = ChatStreams.delete().execute()
-            logger.info(f"[完全失忆] 清除统计报告等消息记录: {msg_count} 条消息, {stream_count} 个聊天流")
-            logger.info(f"[完全失忆] 数据库已完全清空，真正的失忆完成！")
+            logger.info(f"[完全失忆] 第一次清除: {msg_count} 条消息, {stream_count} 个聊天流")
+
+            # 第二步：启动后台任务延迟删除，确保用户命令消息也被清除
+            # 因为用户命令消息是在插件返回后才被存储的
+            async def delayed_delete():
+                await asyncio.sleep(5)  # 等待5秒
+                # 删除在 cutoff_time 之前的所有消息
+                deleted_msg = Messages.delete().where(Messages.time <= cutoff_time).execute()
+                deleted_stream = ChatStreams.delete().execute()
+                logger.info(f"[完全失忆] 延迟删除完成: {deleted_msg} 条消息, {deleted_stream} 个聊天流")
+                logger.info(f"[完全失忆] 数据库已完全清空，真正的失忆完成！")
+
+            # 启动后台任务
+            asyncio.create_task(delayed_delete())
+            logger.info("[完全失忆] 已启动延迟删除任务，将在5秒后再次清除")
 
         except Exception as e:
             logger.error(f"完全失忆失败: {e}", exc_info=True)
@@ -380,7 +395,7 @@ class AmnesiaPlugin(BasePlugin):
             ),
             "config_version": ConfigField(
                 type=str,
-                default="1.1.0",
+                default="1.2.2",
                 description="配置文件版本"
             ),
             "permission": ConfigField(
