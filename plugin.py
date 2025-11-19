@@ -21,10 +21,20 @@ from src.common.database.database_model import (
     Messages,
     ChatStreams,
     PersonInfo,
-    GroupInfo,
     Expression,
     ActionRecords,
+    ChatHistory,
+    ThinkingBack,
+    Jargon,
 )
+
+# GroupInfo 在某些版本可能不存在，尝试导入
+try:
+    from src.common.database.database_model import GroupInfo
+    HAS_GROUP_INFO = True
+except ImportError:
+    GroupInfo = None
+    HAS_GROUP_INFO = False
 
 logger = get_logger("amnesia_plugin")
 
@@ -175,7 +185,10 @@ class AmnesiaCommand(BaseCommand):
                 "• 认识的所有人和印象\n"
                 "• 群组信息和印象\n"
                 "• 学习到的表达风格\n"
-                "• 动作记录\n\n"
+                "• 动作记录\n"
+                "• 聊天历史概括\n"
+                "• 思考记录\n"
+                "• 俚语黑话学习\n\n"
                 "💥 这是不可逆的操作！\n\n"
                 "如果确认，请在30秒内发送：\n"
                 "`/失忆 完全 确认`"
@@ -203,6 +216,9 @@ class AmnesiaCommand(BaseCommand):
                 "group_info": 0,
                 "expression": 0,
                 "action_records": 0,
+                "chat_history": 0,
+                "thinking_back": 0,
+                "jargon": 0,
             }
 
             # 记录当前时间戳，用于后续延迟删除
@@ -215,14 +231,25 @@ class AmnesiaCommand(BaseCommand):
             stats["chat_streams"] = ChatStreams.delete().execute()
             stats["person_info"] = PersonInfo.delete().execute()
 
-            # GroupInfo 表可能不存在，跳过即可
-            if db.table_exists(GroupInfo):
-                stats["group_info"] = GroupInfo.delete().execute()
+            # GroupInfo 表可能不存在，检查后清除
+            if HAS_GROUP_INFO and GroupInfo is not None:
+                try:
+                    if db.table_exists(GroupInfo):
+                        stats["group_info"] = GroupInfo.delete().execute()
+                    else:
+                        logger.warning("[完全失忆] GroupInfo 表不存在，跳过清除")
+                except Exception as e:
+                    logger.warning(f"[完全失忆] 清除 GroupInfo 失败: {e}")
             else:
-                logger.warning("[完全失忆] GroupInfo 表不存在，跳过清除")
+                logger.info("[完全失忆] GroupInfo 模型未导入，跳过清除")
 
             stats["expression"] = Expression.delete().execute()
             stats["action_records"] = ActionRecords.delete().execute()
+
+            # 清除长期记忆和学习数据
+            stats["chat_history"] = ChatHistory.delete().execute()
+            stats["thinking_back"] = ThinkingBack.delete().execute()
+            stats["jargon"] = Jargon.delete().execute()
 
             # 2. 清除本地存储（保留统计数据）
             logger.info("[完全失忆] 清除本地存储...")
@@ -264,6 +291,9 @@ class AmnesiaCommand(BaseCommand):
                 stats["group_info"],
                 stats["expression"],
                 stats["action_records"],
+                stats["chat_history"],
+                stats["thinking_back"],
+                stats["jargon"],
             ])
 
             # 简化报告：只显示总计，避免消息过长被截断
@@ -286,6 +316,9 @@ class AmnesiaCommand(BaseCommand):
             logger.info(f"  👥 群组记忆: {stats['group_info']} 个")
             logger.info(f"  💭 表达风格: {stats['expression']} 个")
             logger.info(f"  🎬 动作记录: {stats['action_records']} 条")
+            logger.info(f"  📚 聊天历史概括: {stats['chat_history']} 条")
+            logger.info(f"  🧠 思考记录: {stats['thinking_back']} 条")
+            logger.info(f"  🗣️ 俚语黑话: {stats['jargon']} 条")
             logger.info(f"  📦 总计: {total_cleared} 项记忆")
 
             # 方案2：分两步删除消息
@@ -334,6 +367,9 @@ class AmnesiaCommand(BaseCommand):
 • 群组信息和印象
 • 学习到的表达风格
 • 动作记录
+• 聊天历史概括
+• 思考记录
+• 俚语黑话学习
 
 使用步骤：
 1. 发送 /失忆 完全
@@ -383,7 +419,7 @@ class AmnesiaPlugin(BasePlugin):
             ),
             "config_version": ConfigField(
                 type=str,
-                default="1.3.0",
+                default="1.4.0",
                 description="配置文件版本"
             ),
             "permission": ConfigField(
