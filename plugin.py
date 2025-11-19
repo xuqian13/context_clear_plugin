@@ -22,8 +22,6 @@ from src.common.database.database_model import (
     ChatStreams,
     PersonInfo,
     GroupInfo,
-    MemoryChest,
-    MemoryConflict,
     Expression,
     ActionRecords,
 )
@@ -176,9 +174,8 @@ class AmnesiaCommand(BaseCommand):
                 "• 所有聊天记录\n"
                 "• 认识的所有人和印象\n"
                 "• 群组信息和印象\n"
-                "• 长期记忆仓库\n"
                 "• 学习到的表达风格\n"
-                "• 统计数据\n\n"
+                "• 动作记录\n\n"
                 "💥 这是不可逆的操作！\n\n"
                 "如果确认，请在30秒内发送：\n"
                 "`/失忆 完全 确认`"
@@ -204,8 +201,6 @@ class AmnesiaCommand(BaseCommand):
                 "chat_streams": 0,
                 "person_info": 0,
                 "group_info": 0,
-                "memory_chest": 0,
-                "memory_conflict": 0,
                 "expression": 0,
                 "action_records": 0,
             }
@@ -226,8 +221,6 @@ class AmnesiaCommand(BaseCommand):
             else:
                 logger.warning("[完全失忆] GroupInfo 表不存在，跳过清除")
 
-            stats["memory_chest"] = MemoryChest.delete().execute()
-            stats["memory_conflict"] = MemoryConflict.delete().execute()
             stats["expression"] = Expression.delete().execute()
             stats["action_records"] = ActionRecords.delete().execute()
 
@@ -269,8 +262,6 @@ class AmnesiaCommand(BaseCommand):
                 stats["chat_streams"],
                 stats["person_info"],
                 stats["group_info"],
-                stats["memory_chest"],
-                stats["memory_conflict"],
                 stats["expression"],
                 stats["action_records"],
             ])
@@ -293,8 +284,6 @@ class AmnesiaCommand(BaseCommand):
             logger.info(f"  🌊 聊天流: {stats['chat_streams']} 个")
             logger.info(f"  👤 个人印象: {stats['person_info']} 人")
             logger.info(f"  👥 群组记忆: {stats['group_info']} 个")
-            logger.info(f"  🗃️ 记忆仓库: {stats['memory_chest']} 条")
-            logger.info(f"  ⚠️ 记忆冲突: {stats['memory_conflict']} 个")
             logger.info(f"  💭 表达风格: {stats['expression']} 个")
             logger.info(f"  🎬 动作记录: {stats['action_records']} 条")
             logger.info(f"  📦 总计: {total_cleared} 项记忆")
@@ -343,9 +332,8 @@ class AmnesiaCommand(BaseCommand):
 • 所有聊天记录和会话
 • 认识的所有人和印象
 • 群组信息和印象
-• 长期记忆仓库
 • 学习到的表达风格
-• 统计数据
+• 动作记录
 
 使用步骤：
 1. 发送 /失忆 完全
@@ -395,7 +383,7 @@ class AmnesiaPlugin(BasePlugin):
             ),
             "config_version": ConfigField(
                 type=str,
-                default="1.2.2",
+                default="1.3.0",
                 description="配置文件版本"
             ),
             "permission": ConfigField(
