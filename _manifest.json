@@ -2,8 +2,8 @@
   "manifest_version": 1,
   "name": "context_clear_plugin",
   "display_name": "麦麦失忆插件 (上下文清除插件升级版)",
-  "version": "1.4.0",
-  "description": "让麦麦选择性失忆,忘记之前的对话~ 支持忘记全部/最近/指定时间前的记忆,新增完全失忆模式 (改进自上下文清除插件)",
+  "version": "1.5.0",
+  "description": "让麦麦选择性失忆,忘记之前的对话~ 支持忘记全部/最近/指定时间前的记忆,新增完全失忆模式和状态机确认机制 (改进自上下文清除插件)",
   "author": {
     "name": "靓仔",
     "url": "https://github.com/xuqian13"
@@ -13,7 +13,7 @@
     "min_version": "0.8.0",
     "max_version": "1.0.0"
   },
-  "keywords": ["失忆", "amnesia", "forget", "记忆", "断片", "clear", "context", "上下文", "清除", "total"],
+  "keywords": ["失忆", "amnesia", "forget", "记忆", "断片", "clear", "context", "上下文", "清除", "total", "确认", "状态机"],
   "categories": ["Utility", "Fun", "Management"],
   "repository_url": "https://github.com/xuqian13/context_clear_plugin",
   "dependencies": [],
@@ -26,6 +26,13 @@
         "name": "amnesia",
         "pattern": "^/(失忆|忘记|断片|amnesia|forget|clear|清除上下文|清空上下文)",
         "description": "让麦麦失忆忘记对话"
+      }
+    ],
+    "event_handlers": [
+      {
+        "name": "amnesia_confirm_handler",
+        "event_type": "ON_MESSAGE",
+        "description": "监听失忆确认消息"
       }
     ]
   }
